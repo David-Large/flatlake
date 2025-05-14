@@ -9,6 +9,31 @@
 
 ## Unreleased
 
+## v0.4.3 (May 7, 2024)
+
+## v0.4.2 (May 7, 2024)
+
+* Boolean data now also generates aggregate listings
+
+## v0.4.1 (May 5, 2024)
+
+* Fixed aggregation on `merge_data`
+
+## v0.4.0 (May 5, 2024)
+
+* BREAKING: Rename collection `meta` to `merge_data`, changed from standalone object to merge into the `data` object
+
+## v0.3.0 (May 3, 2024)
+
+* BREAKING: Changed collection configuration format to nest `path` within `inputs`
+  * Allows multiple inputs to merge into one collection
+  * Add ability to put each input under a sub key
+  * Allows fixed metadata to be attacked to each input
+
+## v0.2.1 (May 2, 2024)
+
+* Flatlake now looks into symlinks when finding content
+
 ## v0.2.0 (November 3, 2023)
 
 * A new output of `flat_data` can now be set, which writes front matter keys at the root object rather than within `data`.
