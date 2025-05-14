@@ -1,4 +1,4 @@
-Feature: Content Tests
+Feature: Aggregation Tests
 
     Background:
         Given I have the environment variables:
@@ -9,6 +9,7 @@ Feature: Content Tests
             """
             ---
             _schema: animal
+            warm: true
             uuid: abc
             published_date: 2023-09-01T00:00:00+0000
             info:
@@ -17,12 +18,12 @@ Feature: Content Tests
               - mammal
               - carnivore
             ---
-            # Content about cats
             """
         Given I have a "content/animals/dog.md" file with the content:
             """
             ---
             _schema: animal
+            warm: true
             uuid: def
             published_date: 2023-09-02T00:00:00+0000
             info:
@@ -31,12 +32,12 @@ Feature: Content Tests
               - mammal
               - carnivore
             ---
-            # Content about dogs
             """
         Given I have a "content/animals/iguana.md" file with the content:
             """
             ---
             _schema: animal
+            warm: false
             uuid: ghi
             published_date: 2023-09-03T00:00:00+0000
             info:
@@ -47,7 +48,7 @@ Feature: Content Tests
             ---
             """
 
-    Scenario: Output full content in list endpoints
+    Scenario: Aggregate files are enabled by default
         Given I have a "flatlake.yaml" file with the content:
             """
             collections:
@@ -57,19 +58,12 @@ Feature: Content Tests
                     glob: "**/*.{md}"
                 sort_key: published_date
                 sort_direction: desc
-                list_elements: [ "data", "content" ]
             """
         When I run my program
         Then I should see "flatlake running" in stdout
-        Then I should see "api/animals/aggregate/tags/mammal/page-1.json" containing the values:
-            | values.0.data.uuid       | def                    |
-            | values.0.data.info.title | Dog                    |
-            | values.0.content         | # Content about dogs\n |
-            | values.1.data.uuid       | abc                    |
-            | values.1.data.info.title | Cat                    |
-            | values.1.content         | # Content about cats\n |
+        Then I should see the file "api/animals/aggregate/tags/mammal/page-1.json"
 
-    Scenario: Output ASTs in single endpoints
+    Scenario: Aggregate files can be disabled
         Given I have a "flatlake.yaml" file with the content:
             """
             collections:
@@ -79,11 +73,24 @@ Feature: Content Tests
                     glob: "**/*.{md}"
                 sort_key: published_date
                 sort_direction: desc
-                single_elements: [ "content_ast" ]
+                outputs: [ "single" ]
             """
         When I run my program
         Then I should see "flatlake running" in stdout
-        Then I should see "api/animals/cat.json" containing the values:
-            | content_ast.type                        | root               |
-            | content_ast.children.0.type             | heading            |
-            | content_ast.children.0.children.0.value | Content about cats |
+        Then I should not see the file "api/animals/aggregate/tags/mammal/page-1.json"
+
+    Scenario: Booleans generate aggregate files
+        Given I have a "flatlake.yaml" file with the content:
+            """
+            collections:
+              - output_key: "animals"
+                inputs:
+                  - path: "animals"
+                    glob: "**/*.{md}"
+                sort_key: published_date
+                sort_direction: desc
+            """
+        When I run my program
+        Then I should see "flatlake running" in stdout
+        Then I should see the file "api/animals/aggregate/warm/true/page-1.json"
+        Then I should see the file "api/animals/aggregate/warm/false/page-1.json"
